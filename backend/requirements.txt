@@ -1,0 +1,81 @@
+# ============================================================
+# ViraLoop – Zależności backendu Python
+# ============================================================
+
+# --- Serwer API ---
+fastapi==0.115.6
+uvicorn[standard]==0.32.1
+pydantic==2.10.3
+pydantic-settings==2.6.1
+python-multipart==0.0.19
+httpx==0.28.1
+aiofiles==24.1.0
+websockets==13.1
+
+# --- Orkiestracja agentów ---
+langgraph==1.0.0
+langchain-core==0.3.28
+langchain-anthropic==0.3.3
+langchain-openai==0.2.14
+langsmith==0.2.3
+dspy==3.1.3
+
+# --- Obliczenia rozproszone ---
+ray[serve,data]==2.53.0
+modal==0.73.0
+
+# --- Generowanie wideo (API klientów) ---
+fal-client==0.5.6
+replicate==1.0.4
+
+# --- Synteza głosu ---
+elevenlabs==1.52.0
+httpx==0.28.1
+
+# --- Przetwarzanie audio/wideo ---
+faster-whisper==1.1.0
+ffmpeg-python==0.2.0
+Pillow==11.0.0
+numpy==2.1.3
+
+# --- Analityka i bazy danych ---
+clickhouse-connect==0.8.12
+qdrant-client==1.12.1
+redis==5.2.1
+asyncpg==0.30.0
+sqlalchemy[asyncio]==2.0.36
+
+# --- Algorytmy ewolucyjne ---
+pygad==3.3.1
+scipy==1.14.1
+scikit-learn==1.5.2
+
+# --- Tłumaczenia ---
+deepl==1.20.0
+anthropic==0.40.0
+openai==1.57.4
+
+# --- Zgodność C2PA ---
+c2pa-python==0.5.1
+
+# --- Kolejka zadań ---
+celery[redis]==5.4.0
+kombu==5.4.2
+
+# --- Monitorowanie ---
+prometheus-client==0.21.1
+opentelemetry-api==1.28.4
+opentelemetry-sdk==1.28.4
+structlog==24.4.0
+
+# --- Bezpieczeństwo ---
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+cryptography==43.0.3
+
+# --- Narzędzia deweloperskie ---
+pytest==8.3.4
+pytest-asyncio==0.24.0
+black==24.10.0
+ruff==0.8.3
+mypy==1.13.0

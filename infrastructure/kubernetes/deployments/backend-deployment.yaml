@@ -1,0 +1,116 @@
+# ViraLoop – Deployment backendu FastAPI na Kubernetes
+# KubeRay do dystrybucji GPU, HPA do skalowania na podstawie głębokości kolejki
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: viraloop-backend
+  namespace: viraloop
+  labels:
+    app: viraloop-backend
+    wersja: "1.0.0"
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: viraloop-backend
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: viraloop-backend
+    spec:
+      serviceAccountName: viraloop-backend
+      containers:
+        - name: backend
+          image: viraloop/backend:latest
+          ports:
+            - containerPort: 8000
+              name: http
+          envFrom:
+            - secretRef:
+                name: viraloop-sekrety
+            - configMapRef:
+                name: viraloop-konfiguracja
+          resources:
+            requests:
+              cpu: "500m"
+              memory: "1Gi"
+            limits:
+              cpu: "4"
+              memory: "8Gi"
+          livenessProbe:
+            httpGet:
+              path: /api/zdrowie
+              port: 8000
+            initialDelaySeconds: 30
+            periodSeconds: 15
+            failureThreshold: 3
+          readinessProbe:
+            httpGet:
+              path: /api/zdrowie
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            failureThreshold: 3
+          volumeMounts:
+            - name: tmp-storage
+              mountPath: /tmp
+      volumes:
+        - name: tmp-storage
+          emptyDir:
+            sizeLimit: "10Gi"
+      affinity:
+        podAntiAffinity:
+          preferredDuringSchedulingIgnoredDuringExecution:
+            - weight: 100
+              podAffinityTerm:
+                labelSelector:
+                  matchExpressions:
+                    - key: app
+                      operator: In
+                      values:
+                        - viraloop-backend
+                topologyKey: kubernetes.io/hostname
+---
+# Skalowanie poziome (HPA) – na podstawie głębokości kolejki Redis
+apiVersion: autoscaling/v2
+kind: HorizontalPodAutoscaler
+metadata:
+  name: viraloop-backend-hpa
+  namespace: viraloop
+spec:
+  scaleTargetRef:
+    apiVersion: apps/v1
+    kind: Deployment
+    name: viraloop-backend
+  minReplicas: 3
+  maxReplicas: 20
+  metrics:
+    - type: Resource
+      resource:
+        name: cpu
+        target:
+          type: Utilization
+          averageUtilization: 70
+    - type: Resource
+      resource:
+        name: memory
+        target:
+          type: Utilization
+          averageUtilization: 80
+    # Custom metric: głębokość kolejki Redis (zadania wideo oczekujące)
+    - type: External
+      external:
+        metric:
+          name: redis_queue_depth
+          selector:
+            matchLabels:
+              kolejka: wideo-generowanie
+        target:
+          type: AverageValue
+          averageValue: "10"

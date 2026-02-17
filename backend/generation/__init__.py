@@ -1,0 +1,1 @@
+# Pakiet generacji treści ViraLoop

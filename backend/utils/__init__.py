@@ -1,1 +1,0 @@
-# Narzędzia pomocnicze ViraLoop

@@ -1,1 +1,0 @@
-# Pakiet analityczny ViraLoop

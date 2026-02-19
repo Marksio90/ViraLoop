@@ -1,1 +1,0 @@
-# Moduł generacji wideo ViraLoop

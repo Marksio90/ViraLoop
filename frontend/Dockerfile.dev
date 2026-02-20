@@ -1,0 +1,29 @@
+# ====================================================================
+# NEXUS Frontend — Dockerfile DEV (hot-reload)
+# Next.js 15 + Turbopack (blazing fast HMR)
+# ====================================================================
+
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Zainstaluj zależności systemowe
+RUN apk add --no-cache libc6-compat
+
+# Skopiuj pliki package i zainstaluj WSZYSTKIE zależności (dev + prod)
+COPY package.json package-lock.json* ./
+RUN npm ci
+
+# Zmienne środowiskowe Next.js
+ENV NODE_ENV=development
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
+
+# Kod źródłowy montowany jako volume w docker-compose.dev.yml
+# COPY . .   ← pominięte, volume zastępuje
+
+EXPOSE 3000
+
+# Turbopack: HMR <500ms, 10x szybszy niż webpack
+CMD ["npm", "run", "dev"]

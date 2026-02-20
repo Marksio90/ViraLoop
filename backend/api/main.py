@@ -24,6 +24,8 @@ from fastapi.responses import JSONResponse
 
 from konfiguracja import pobierz_konfiguracje
 from api.trasy.wideo import router as router_wideo
+from api.trasy.ws import router as router_ws
+from api.trasy.zadania import router as router_zadania
 
 # Konfiguruj strukturowane logi
 structlog.configure(
@@ -142,6 +144,8 @@ async def loguj_czas_odpowiedzi(request: Request, call_next):
 # ====================================================================
 
 app.include_router(router_wideo)
+app.include_router(router_ws)       # WebSocket: /ws/wideo/{sesja_id}
+app.include_router(router_zadania)  # Async jobs: /api/v1/zadania/
 
 
 # ====================================================================
@@ -166,8 +170,14 @@ async def root():
         "czas_generacji": "~90 sekund",
         "endpointy": {
             "docs": "/docs",
-            "generuj": "POST /api/v1/wideo/generuj",
+            "generuj_sync": "POST /api/v1/wideo/generuj",
+            "generuj_async": "POST /api/v1/zadania/generuj",
+            "status_zadania": "GET /api/v1/zadania/{task_id}",
+            "websocket": "WS /ws/wideo/{sesja_id}",
             "wiralnosc": "POST /api/v1/wideo/wiralnosc",
+            "monitoring": "http://localhost:5555 (Flower)",
+            "metryki": "http://localhost:9090 (Prometheus)",
+            "dashboardy": "http://localhost:3001 (Grafana)",
             "zdrowie": "/api/zdrowie",
         }
     }
@@ -178,10 +188,33 @@ async def zdrowie():
     """Sprawdza zdrowie wszystkich komponentów platformy."""
     import shutil
 
+    # Sprawdź Redis
+    redis_ok = False
+    try:
+        import redis.asyncio as aioredis
+        r = aioredis.from_url(konf.REDIS_URL, decode_responses=True, socket_connect_timeout=2)
+        await r.ping()
+        await r.aclose()
+        redis_ok = True
+    except Exception:
+        pass
+
+    # Sprawdź Celery (krótki timeout)
+    celery_ok = False
+    try:
+        from celery_app import celery_app
+        inspect = celery_app.control.inspect(timeout=2)
+        stats = inspect.stats()
+        celery_ok = bool(stats)
+    except Exception:
+        pass
+
     komponenty = {
         "api": "ok",
         "openai": "ok" if konf.OPENAI_API_KEY else "brak_klucza",
         "ffmpeg": "ok" if shutil.which("ffmpeg") else "niedostepny",
+        "redis": "ok" if redis_ok else "niedostepny",
+        "celery": "ok" if celery_ok else "niedostepny",
         "katalogi": {
             "tymczasowy": os.path.exists(konf.SCIEZKA_TYMCZASOWA),
             "wyjsciowy": os.path.exists(konf.SCIEZKA_WYJSCIOWA),
@@ -191,6 +224,7 @@ async def zdrowie():
     status_ogolny = "zdrowy" if all([
         komponenty["openai"] == "ok",
         komponenty["ffmpeg"] == "ok",
+        komponenty["redis"] == "ok",
     ]) else "czesciowo_zdrowy"
 
     return {

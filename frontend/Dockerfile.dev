@@ -12,7 +12,8 @@ RUN apk add --no-cache libc6-compat
 
 # Skopiuj pliki package i zainstaluj WSZYSTKIE zależności (dev + prod)
 COPY package.json package-lock.json* ./
-RUN npm ci
+# npm ci wymaga lock file — używamy npm install gdy go brak
+RUN if [ -f package-lock.json ]; then npm ci; else npm install; fi
 
 # Zmienne środowiskowe Next.js
 ENV NODE_ENV=development

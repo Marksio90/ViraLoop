@@ -1,13 +1,22 @@
 # ====================================================================
 # NEXUS Frontend — Dockerfile Multi-Stage
-# Next.js 15 + Turbopack
+# Next.js 15 + standalone output (nie wymaga package-lock.json)
 # ====================================================================
 
 # --- Etap 1: Zależności ---
 FROM node:20-alpine AS deps
 WORKDIR /app
+
+RUN apk add --no-cache libc6-compat
+
 COPY package.json package-lock.json* ./
-RUN npm ci --only=production
+
+# npm ci wymaga lock file — używamy npm install gdy go brak
+RUN if [ -f package-lock.json ]; then \
+      npm ci; \
+    else \
+      npm install; \
+    fi
 
 # --- Etap 2: Builder ---
 FROM node:20-alpine AS builder
@@ -16,6 +25,7 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
 ENV NEXT_TELEMETRY_DISABLED=1
+# next.config.ts ma output: "standalone" — buduje do .next/standalone
 RUN npm run build
 
 # --- Etap 3: Runner ---

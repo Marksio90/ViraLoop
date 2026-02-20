@@ -1,6 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  output: "standalone",   // wymagane przez Dockerfile (node server.js)
   experimental: {
     reactCompiler: true,
   },

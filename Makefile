@@ -70,6 +70,16 @@ rebuild: ## 🔨  Zbuduj od zera (bez cache)
 	@echo "$(BOLD)$(YELLOW)🔨 Buduję bez cache...$(RESET)"
 	@$(COMPOSE) build --no-cache --pull
 
+.PHONY: bake
+bake: ## 🍞  Zbuduj obrazy przez Docker Bake (docker-bake.hcl)
+	@echo "$(BOLD)$(YELLOW)🍞 Buduję obrazy przez Docker Bake...$(RESET)"
+	@docker buildx bake
+
+.PHONY: bake-no-cache
+bake-no-cache: ## 🍞  Docker Bake bez cache
+	@echo "$(BOLD)$(YELLOW)🍞 Buduję bez cache (Docker Bake)...$(RESET)"
+	@docker buildx bake --no-cache
+
 .PHONY: pull
 pull: ## ⬇  Pobierz najnowsze obrazy bazowe
 	@$(COMPOSE) pull

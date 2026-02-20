@@ -1,8 +1,98 @@
-# ViraLoop 🎬
+# NEXUS — AI Video Factory
 
-**Platforma AI do generowania wirusowych filmów wideo**
+**Bezkonkurencyjna, wieloagentowa platforma do tworzenia wirusowych krótkich wideo.**
+Na kluczu OpenAI. W pełni po polsku. ~$0.14/wideo. ~90 sekund generacji.
 
-ViraLoop to kompleksowa platforma do automatycznego tworzenia, optymalizowania i dystrybucji treści wideo z wykorzystaniem sztucznej inteligencji. System łączy najnowocześniejsze modele generatywne z ewolucyjnymi algorytmami optymalizacji, aby maksymalizować zaangażowanie i zasięg publikowanych materiałów.
+> Poprzednia wersja (ViraLoop) używała 10+ zewnętrznych API za $1.07/wideo.
+> NEXUS osiąga to samo **wyłącznie na kluczu OpenAI za ~$0.147/wideo**.
+
+---
+
+## Architektura Multi-Agentowa (LangGraph)
+
+```
+Brief użytkownika
+       │
+       ▼
+┌─────────────────────────────────────────────────────────┐
+│           ORKIESTRATOR (LangGraph v1.0)                  │
+│  State Machine + Checkpoint + Auto-Retry (max 3x)        │
+├──────────┬──────────┬──────────────┬────────────────────┤
+│  Strateg │  Pisarz  │   Reżyser    │   Producent        │
+│  Treści  │Scenariuszy│   Głosu     │   Wizualny         │
+│          │          │              │                    │
+│GPT-4o-mini│GPT-4o-mini│ TTS-1     │   DALL-E 3         │
+│  + RAG   │  + Brand │  6 głosów   │   9:16 Pionowy     │
+│ ~$0.001  │ ~$0.002  │  ~$0.018    │   ~$0.120          │
+└──────────┴──────────┴──────────────┴────────────────────┘
+                    │
+                    ▼
+         ┌─────────────────────┐
+         │  Recenzent Jakości   │
+         │     GPT-4o           │
+         │     ~$0.005          │
+         │                      │
+         │  wynik >= 60 → ✅    │
+         │  wynik <  60 → 🔁    │ (auto-retry, max 3x)
+         └────────┬─────────────┘
+                  │
+                  ▼
+         ┌─────────────────────┐
+         │     COMPOSITOR       │
+         │     FFmpeg           │
+         │  Ken Burns + Fade    │
+         │  MP4 1080x1920       │
+         └────────┬─────────────┘
+                  │
+                  ▼
+       Gotowe wideo + NVS Score
+```
+
+---
+
+## Koszt na Wideo
+
+| Komponent | Model OpenAI | Koszt |
+|---|---|---|
+| Strategia + Scenariusz | GPT-4o-mini | ~$0.003 |
+| Narracja audio | OpenAI TTS-1 | ~$0.018 |
+| Obrazy (3 sceny) | DALL-E 3 | ~$0.120 |
+| Recenzja jakości | GPT-4o | ~$0.005 |
+| Embeddingi RAG | text-embedding-3-small | ~$0.001 |
+| **RAZEM** | | **~$0.147** |
+
+**7x taniej** niż poprzednia architektura ($1.07/wideo).
+
+---
+
+## NEXUS Viral Score (NVS)
+
+- 🔥 **85-100** — Wysoki potencjał wiralny
+- ✅ **60-84** — Dobry content, publikuj
+- ⚠️ **<60** — Auto-retry (max 3 próby)
+
+---
+
+## Szybki Start
+
+```bash
+git clone <repo> && cd ViraLoop
+cp .env.example .env
+# Ustaw OPENAI_API_KEY w .env
+
+# Backend
+cd backend && pip install -r requirements.txt
+uvicorn api.main:app --reload --port 8000
+
+# Frontend
+cd frontend && npm install && npm run dev
+```
+
+API Docs: http://localhost:8000/docs
+Studio: http://localhost:3000/studio
+Analityka NVS: http://localhost:3000/analityka
+
+---
 
 ## Kluczowe możliwości
 

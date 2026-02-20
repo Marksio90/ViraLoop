@@ -36,6 +36,7 @@
     "@hookform/resolvers": "^3.9.1"
   },
   "devDependencies": {
+    "babel-plugin-react-compiler": "^19.0.0",
     "@types/node": "^22.10.2",
     "@types/react": "^19.0.2",
     "@types/react-dom": "^19.0.2",

@@ -4,9 +4,12 @@
 # Optymalizacja: OpenAI-first, najtańszy koszt, najwyższa jakość
 # ====================================================================
 
-# --- Rdzeń FastAPI ---
+# --- Rdzeń FastAPI (z WebSocket i wysoką wydajnością) ---
 fastapi==0.115.6
 uvicorn[standard]==0.32.1
+uvloop==0.21.0               # Szybsza pętla asyncio (2-3x)
+httptools==0.6.4              # Szybszy parser HTTP
+websockets==14.1              # WebSocket support
 python-multipart==0.0.18
 python-dotenv==1.0.1
 pydantic==2.10.4
@@ -41,6 +44,7 @@ pandas==2.2.3
 sqlalchemy==2.0.36
 asyncpg==0.30.0
 redis==5.2.1
+redis[asyncio]==5.2.1         # Async Redis (WebSocket pub/sub)
 aiohttp==3.11.11
 
 # --- Bezpieczeństwo i Auth ---
@@ -48,12 +52,16 @@ python-jose[cryptography]==3.3.0
 passlib[bcrypt]==1.7.4
 bcrypt==4.2.1
 
-# --- Cache i kolejkowanie ---
-celery==5.4.0
+# --- Celery + Flower (async background tasks) ---
+celery[redis]==5.4.0          # Celery z Redis backendem
+flower==2.0.1                 # Celery monitoring dashboard
+kombu==5.4.2                  # Celery transport layer
 
 # --- Monitoring i logi ---
 structlog==24.4.0
 prometheus-client==0.21.1
+opentelemetry-api==1.29.0
+opentelemetry-sdk==1.29.0
 
 # --- HTTP klient ---
 httpx==0.28.1

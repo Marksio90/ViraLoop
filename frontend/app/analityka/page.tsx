@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
 
 interface WynikWiralnosci {
@@ -339,7 +339,7 @@ export default function AnaliitykaPage() {
                 )}
 
                 {/* Wskazówki */}
-                {wynik.wskazowki_optymalizacji?.length > 0 && (
+                {wynik.wskazowki_optymalizacji.length > 0 && (
                   <div className="nexus-card">
                     <h4 className="font-bold mb-3">💡 Jak zwiększyć NVS</h4>
                     <ul className="space-y-2">

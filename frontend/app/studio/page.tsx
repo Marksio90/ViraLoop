@@ -292,7 +292,7 @@ function KartaWynikow({ wynik }: { wynik: WynikGeneracji }) {
       )}
 
       {/* Wskazówki optymalizacji */}
-      {wynik.ocena_wiralnosci?.wskazowki_optymalizacji?.length > 0 && (
+      {(wynik.ocena_wiralnosci?.wskazowki_optymalizacji?.length ?? 0) > 0 && (
         <div className="nexus-card">
           <h4 className="font-bold mb-3">💡 Wskazówki Optymalizacji</h4>
           <ul className="space-y-2">
@@ -307,7 +307,7 @@ function KartaWynikow({ wynik }: { wynik: WynikGeneracji }) {
       )}
 
       {/* Błędy */}
-      {wynik.bledy?.length > 0 && (
+      {wynik.bledy.length > 0 && (
         <div className="nexus-card border-red-500/30 bg-red-500/5">
           <h4 className="font-bold text-red-400 mb-2">Ostrzeżenia</h4>
           {wynik.bledy.map((b, i) => (

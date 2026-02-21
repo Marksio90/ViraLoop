@@ -1,225 +1,331 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 
 const AGENCI = [
   {
     ikona: "🧠",
-    nazwa: "Strateg Treści",
-    model: "GPT-4o-mini",
-    opis: "Analizuje brief, tworzy strategiczny plan z optymalnym hakiem",
-    koszt: "$0.001",
+    kolor: "from-violet-500 to-purple-600",
+    nazwa: "Strateg Narracji",
+    model: "GPT-4o",
+    opis: "Projektuje łuk fabularny, haki emocjonalne i cliffhangery między odcinkami",
+    krok: "01",
   },
   {
     ikona: "✍️",
+    kolor: "from-blue-500 to-cyan-500",
     nazwa: "Pisarz Scenariuszy",
-    model: "GPT-4o-mini",
-    opis: "Pisze scenariusz scena po scenie z anotacjami wizualnymi",
-    koszt: "$0.002",
+    model: "GPT-4o",
+    opis: "Pisze pełny scenariusz z dialogami, opisami scen i animowanymi napisami",
+    krok: "02",
   },
   {
     ikona: "🎙️",
+    kolor: "from-emerald-500 to-teal-500",
     nazwa: "Reżyser Głosu",
     model: "OpenAI TTS",
-    opis: "Syntezuje profesjonalną narrację z 6 głosami do wyboru",
-    koszt: "$0.018",
+    opis: "Generuje profesjonalną narrację z segmentami czasowymi dla karaoke",
+    krok: "03",
   },
   {
     ikona: "🎨",
+    kolor: "from-orange-500 to-amber-500",
     nazwa: "Producent Wizualny",
     model: "DALL-E 3",
-    opis: "Generuje cinematic obrazy 9:16 dla każdej sceny",
-    koszt: "$0.120",
+    opis: "Tworzy spójne wizualnie klatki 9:16 z dynamicznym oświetleniem i stylem",
+    krok: "04",
   },
   {
-    ikona: "🔍",
-    nazwa: "Recenzent Jakości",
-    model: "GPT-4o",
-    opis: "Ocenia i zatwierdza. Jeśli wynik < 60 → automatyczny retry",
-    koszt: "$0.005",
+    ikona: "🎬",
+    kolor: "from-rose-500 to-pink-600",
+    nazwa: "Montażysta AI",
+    model: "FFmpeg + AI",
+    opis: "Scala animowane napisy, efekty Ken Burns, przejścia i muzykę w gotowe MP4",
+    krok: "05",
+  },
+  {
+    ikona: "📡",
+    kolor: "from-indigo-500 to-violet-600",
+    nazwa: "Analityk Wiralności",
+    model: "GPT-4o-mini",
+    opis: "Predykcja NEXUS Viral Score i optymalizacja pod TikTok/YT/Reels algorytmy",
+    krok: "06",
   },
 ];
 
-const PLATFORMY = [
-  { ikona: "🎵", nazwa: "TikTok", kolor: "from-pink-500 to-rose-500" },
-  { ikona: "▶️", nazwa: "YouTube Shorts", kolor: "from-red-500 to-red-700" },
-  { ikona: "📸", nazwa: "Instagram Reels", kolor: "from-purple-500 to-pink-500" },
+const GATUNKI = [
+  { emoji: "⚔️", tytul: "Tajemnice Historii", opis: "Zapomniane sekrety i spiski", gradient: "from-amber-900/60 to-red-900/60" },
+  { emoji: "🔬", tytul: "Nauka i Odkrycia", opis: "Przełomowe momenty ludzkości", gradient: "from-cyan-900/60 to-blue-900/60" },
+  { emoji: "👑", tytul: "Wielkie Imperia", opis: "Powstanie i upadek cywilizacji", gradient: "from-purple-900/60 to-violet-900/60" },
+  { emoji: "🕵️", tytul: "Zbrodnie i Sekrety", opis: "Nierozwiązane zagadki i misterium", gradient: "from-slate-900/60 to-zinc-800/60" },
+  { emoji: "🚀", tytul: "Wyścig Technologii", opis: "Od ognia do AI — historia techniki", gradient: "from-emerald-900/60 to-teal-900/60" },
+  { emoji: "💰", tytul: "Fortuna i Bankructwo", opis: "Wzloty i upadki finansowych imperiów", gradient: "from-yellow-900/60 to-orange-900/60" },
 ];
 
-const STATYSTYKI = [
-  { wartosc: "~$0.14", etykieta: "Koszt na wideo", ikona: "💰" },
-  { wartosc: "~90s", etykieta: "Czas generacji", ikona: "⚡" },
-  { wartosc: "0-100", etykieta: "NEXUS Viral Score", ikona: "🔥" },
-  { wartosc: "5", etykieta: "Agentów AI", ikona: "🤖" },
+const STATS = [
+  { value: "6", label: "Agentów AI", sub: "pracujących równolegle" },
+  { value: "~$0.15", label: "Koszt odcinka", sub: "DALL-E 3 + GPT-4o + TTS" },
+  { value: "9:16", label: "Format natywny", sub: "TikTok • YT Shorts • Reels" },
+  { value: "∞", label: "Serie odcinków", sub: "połączone cliffhangerami" },
+];
+
+const PRZYKLADOWE_SERIE = [
+  { tytul: "Sekrety Watykanu", odcinki: 8, wyswietlenia: "2.1M", emoji: "⛪" },
+  { tytul: "Tesla vs Edison", odcinki: 5, wyswietlenia: "890K", emoji: "⚡" },
+  { tytul: "Zaginiony skarb Templa", odcinki: 12, wyswietlenia: "4.3M", emoji: "💎" },
 ];
 
 export default function StronaGlowna() {
   const [aktywnyAgent, setAktywnyAgent] = useState<number | null>(null);
+  const [tekst, setTekst] = useState("");
+  const PELNY_TEKST = "Sekrety Watykanu — 8-odcinkowa seria o ukrytych archiwach";
+
+  useEffect(() => {
+    let i = 0;
+    const interval = setInterval(() => {
+      if (i <= PELNY_TEKST.length) {
+        setTekst(PELNY_TEKST.slice(0, i));
+        i++;
+      } else {
+        clearInterval(interval);
+      }
+    }, 50);
+    return () => clearInterval(interval);
+  }, []);
 
   return (
-    <div className="min-h-screen bg-[#0f0f1a] text-white">
-      {/* Tło z gradientem */}
-      <div className="fixed inset-0 bg-gradient-to-br from-indigo-950/30 via-[#0f0f1a] to-purple-950/20 pointer-events-none" />
+    <div className="min-h-screen relative" style={{ background: "var(--c-bg)" }}>
+      {/* Orbs tła */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] rounded-full opacity-20"
+          style={{ background: "radial-gradient(circle, #7c3aed 0%, transparent 70%)" }} />
+        <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] rounded-full opacity-15"
+          style={{ background: "radial-gradient(circle, #06b6d4 0%, transparent 70%)" }} />
+        <div className="absolute top-[40%] left-[50%] w-[300px] h-[300px] rounded-full opacity-10"
+          style={{ background: "radial-gradient(circle, #f59e0b 0%, transparent 70%)" }} />
+      </div>
 
-      {/* Nawigacja */}
-      <nav className="relative z-10 flex items-center justify-between px-8 py-5 border-b border-white/10">
+      {/* NAV */}
+      <nav className="relative z-20 flex items-center justify-between px-6 md:px-10 py-5 border-b"
+        style={{ borderColor: "var(--c-border)", background: "rgba(5,5,16,0.8)", backdropFilter: "blur(20px)" }}>
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center text-xl font-black">
-            N
+          <div className="w-9 h-9 rounded-xl flex items-center justify-center font-black text-white text-sm"
+            style={{ background: "linear-gradient(135deg, #7c3aed, #06b6d4)" }}>
+            VL
           </div>
-          <span className="text-xl font-black tracking-tight">
-            <span className="gradient-text">NEXUS</span>
+          <span className="text-lg font-bold tracking-tight">
+            Vira<span className="gradient-text-2">Loop</span>
           </span>
+          <span className="badge badge-purple ml-2">BETA</span>
         </div>
 
-        <div className="flex items-center gap-4">
-          <Link
-            href="/studio"
-            className="nexus-button text-sm"
-          >
+        <div className="hidden md:flex items-center gap-6">
+          <Link href="/serie" className="btn-ghost text-sm">Serie</Link>
+          <Link href="/analityka" className="btn-ghost text-sm">Analityka</Link>
+          <Link href="/studio" className="btn-primary" style={{ padding: "10px 20px", fontSize: "14px" }}>
             Otwórz Studio →
           </Link>
         </div>
+
+        <Link href="/studio" className="md:hidden btn-primary" style={{ padding: "8px 16px", fontSize: "13px" }}>
+          Studio →
+        </Link>
       </nav>
 
-      {/* Hero */}
-      <main className="relative z-10 max-w-7xl mx-auto px-8 pt-20 pb-32">
-        {/* Badge */}
-        <div className="flex justify-center mb-8">
-          <span className="inline-flex items-center gap-2 bg-indigo-500/10 border border-indigo-500/30 text-indigo-300 text-sm px-4 py-1.5 rounded-full">
-            <span className="w-2 h-2 bg-indigo-400 rounded-full animate-pulse" />
-            Na kluczu OpenAI — 100% polska platforma
-          </span>
-        </div>
+      {/* HERO */}
+      <main className="relative z-10">
+        <section className="max-w-7xl mx-auto px-6 md:px-10 pt-20 pb-24 text-center">
+          <div className="flex justify-center mb-6">
+            <span className="badge badge-cyan">
+              <span className="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse inline-block" />
+              Automatyczna produkcja seriali shortsy z AI
+            </span>
+          </div>
 
-        {/* Tytuł */}
-        <div className="text-center mb-16">
-          <h1 className="text-6xl md:text-8xl font-black tracking-tight mb-6 leading-none">
-            <span className="gradient-text">AI Video</span>
+          <h1 className="text-5xl md:text-7xl lg:text-8xl font-black tracking-tight leading-none mb-6">
+            <span className="gradient-text">Seriale Shortsy</span>
             <br />
-            <span className="text-white">Factory</span>
+            <span className="text-white">Które Uzależniają</span>
           </h1>
 
-          <p className="text-xl text-white/60 max-w-2xl mx-auto leading-relaxed mb-8">
-            5 agentów AI. 1 brief. Kompletne wideo wirusowe w 90 sekund.
-            <br />
-            Scenariusz → Głos → DALL-E 3 → Recenzja → MP4 gotowy do publikacji.
+          <p className="text-lg md:text-xl max-w-2xl mx-auto mb-4" style={{ color: "var(--c-muted)" }}>
+            Wybierz temat. AI tworzy powiązane odcinki z cliffhangerami, animowanymi napisami
+            i dynamiczną muzyką — gotowe do publikacji na TikTok, YT Shorts i Reels.
           </p>
+
+          {/* Demo typing */}
+          <div className="inline-flex items-center gap-3 glass px-5 py-3 mb-10 text-left">
+            <span style={{ color: "var(--c-muted)", fontSize: 13 }}>Twój temat:</span>
+            <span className="font-mono text-sm" style={{ color: "#a78bfa" }}>
+              {tekst}<span className="animate-pulse">|</span>
+            </span>
+          </div>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link href="/studio" className="nexus-button text-lg px-8 py-4">
-              🚀 Stwórz pierwsze wideo
+            <Link href="/studio" className="btn-primary" style={{ fontSize: "16px", padding: "15px 32px" }}>
+              🎬 Stwórz pierwszą serię
             </Link>
-            <Link
-              href="/analityka"
-              className="text-white/60 hover:text-white transition-colors px-6 py-4 text-lg"
-            >
-              Analityka →
+            <Link href="/serie" className="btn-secondary" style={{ fontSize: "16px" }}>
+              Przeglądaj serie →
             </Link>
           </div>
-        </div>
+        </section>
 
-        {/* Statystyki */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-20">
-          {STATYSTYKI.map((stat) => (
-            <div key={stat.etykieta} className="nexus-card text-center">
-              <div className="text-3xl mb-2">{stat.ikona}</div>
-              <div className="text-3xl font-black gradient-text">{stat.wartosc}</div>
-              <div className="text-white/50 text-sm mt-1">{stat.etykieta}</div>
-            </div>
-          ))}
-        </div>
+        {/* STATS */}
+        <section className="max-w-7xl mx-auto px-6 md:px-10 pb-20">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {STATS.map((s) => (
+              <div key={s.label} className="glass p-6 text-center card-hover">
+                <div className="stat-number text-3xl md:text-4xl gradient-text mb-1">{s.value}</div>
+                <div className="font-semibold text-sm mb-1">{s.label}</div>
+                <div className="text-xs" style={{ color: "var(--c-muted)" }}>{s.sub}</div>
+              </div>
+            ))}
+          </div>
+        </section>
 
-        {/* Pipeline Multi-Agentowy */}
-        <div className="mb-20">
-          <h2 className="text-3xl font-black text-center mb-3">
-            Pipeline <span className="gradient-text">Multi-Agentowy</span>
-          </h2>
-          <p className="text-white/50 text-center mb-10">
-            5 wyspecjalizowanych agentów AI orkiestrowanych przez LangGraph
-          </p>
+        {/* PIPELINE */}
+        <section className="max-w-7xl mx-auto px-6 md:px-10 pb-24">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-black mb-3">
+              6 Agentów AI — <span className="gradient-text">1 Przycisk</span>
+            </h2>
+            <p style={{ color: "var(--c-muted)" }}>
+              Wieloagentowy pipeline z równoległym wykonaniem i automatycznym retry
+            </p>
+          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {AGENCI.map((agent, i) => (
               <div
                 key={agent.nazwa}
-                className={`nexus-card cursor-pointer transition-all duration-300 ${
-                  aktywnyAgent === i
-                    ? "border-indigo-500/50 bg-indigo-500/10"
-                    : "hover:border-indigo-500/30"
-                }`}
+                className="glass p-6 card-hover relative overflow-hidden"
+                style={{ borderColor: aktywnyAgent === i ? "rgba(124,58,237,0.4)" : "var(--c-border)" }}
                 onMouseEnter={() => setAktywnyAgent(i)}
                 onMouseLeave={() => setAktywnyAgent(null)}
               >
-                {/* Numer kroku */}
-                {i < 4 && (
-                  <div className="hidden md:block absolute -right-2 top-1/2 -translate-y-1/2 z-10 text-white/30 text-lg">
-                    →
-                  </div>
+                <div className="absolute top-4 right-4 font-mono text-xs font-bold"
+                  style={{ color: "var(--c-muted)" }}>
+                  {agent.krok}
+                </div>
+
+                {/* Icon */}
+                <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${agent.kolor} flex items-center justify-center text-2xl mb-4`}>
+                  {agent.ikona}
+                </div>
+
+                <div className="font-bold text-base mb-1">{agent.nazwa}</div>
+                <div className="badge badge-purple mb-3 text-xs">{agent.model}</div>
+                <p className="text-sm leading-relaxed" style={{ color: "var(--c-muted)" }}>{agent.opis}</p>
+
+                {/* Active glow */}
+                {aktywnyAgent === i && (
+                  <div className="absolute inset-0 pointer-events-none rounded-[var(--r-card)]"
+                    style={{ background: "linear-gradient(135deg, rgba(124,58,237,0.05), transparent)" }} />
                 )}
-
-                <div className="text-3xl mb-3">{agent.ikona}</div>
-                <div className="text-xs text-indigo-400 font-bold mb-1">
-                  Krok {i + 1}
-                </div>
-                <div className="font-bold mb-1">{agent.nazwa}</div>
-                <div className="text-xs text-purple-400 mb-3 font-mono">
-                  {agent.model}
-                </div>
-                <p className="text-white/50 text-xs leading-relaxed">{agent.opis}</p>
-                <div className="mt-3 text-green-400 text-xs font-mono">
-                  ~{agent.koszt}/wideo
-                </div>
               </div>
             ))}
           </div>
-        </div>
+        </section>
 
-        {/* Platformy */}
-        <div className="mb-20">
-          <h2 className="text-3xl font-black text-center mb-10">
-            Optymalizacja per <span className="gradient-text">Platforma</span>
-          </h2>
+        {/* GATUNKI */}
+        <section className="max-w-7xl mx-auto px-6 md:px-10 pb-24">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-black mb-3">
+              Gatunki <span className="gradient-text">Które Działają</span>
+            </h2>
+            <p style={{ color: "var(--c-muted)" }}>
+              Sprawdzone formaty narracyjne generujące miliony wyświetleń
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            {GATUNKI.map((g) => (
+              <Link href={`/studio?gatunek=${encodeURIComponent(g.tytul)}`} key={g.tytul}>
+                <div className={`relative overflow-hidden rounded-2xl p-6 h-40 cursor-pointer card-hover bg-gradient-to-br ${g.gradient} border`}
+                  style={{ borderColor: "var(--c-border)" }}>
+                  <div className="text-4xl mb-3">{g.emoji}</div>
+                  <div className="font-bold text-base">{g.tytul}</div>
+                  <div className="text-sm mt-1" style={{ color: "var(--c-muted)" }}>{g.opis}</div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+
+        {/* PRZYKŁADOWE SERIE */}
+        <section className="max-w-7xl mx-auto px-6 md:px-10 pb-24">
+          <div className="flex items-center justify-between mb-8">
+            <h2 className="text-2xl md:text-3xl font-black">
+              Przykłady <span className="gradient-text">Gotowych Serii</span>
+            </h2>
+            <Link href="/serie" className="btn-ghost">
+              Wszystkie →
+            </Link>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {PLATFORMY.map((platforma) => (
-              <div key={platforma.nazwa} className="nexus-card text-center">
-                <div
-                  className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${platforma.kolor} flex items-center justify-center text-3xl mx-auto mb-4`}
-                >
-                  {platforma.ikona}
+            {PRZYKLADOWE_SERIE.map((s) => (
+              <div key={s.tytul} className="glass p-6 card-hover">
+                <div className="text-4xl mb-4">{s.emoji}</div>
+                <h3 className="font-bold text-lg mb-2">{s.tytul}</h3>
+                <div className="flex items-center gap-4 text-sm" style={{ color: "var(--c-muted)" }}>
+                  <span>{s.odcinki} odcinków</span>
+                  <span className="text-emerald-400 font-semibold">{s.wyswietlenia} wyśw.</span>
                 </div>
-                <h3 className="text-xl font-bold mb-2">{platforma.nazwa}</h3>
+                <div className="progress-bar mt-4">
+                  <div className="progress-fill" style={{ width: `${Math.random() * 40 + 60}%` }} />
+                </div>
               </div>
             ))}
           </div>
-        </div>
+        </section>
 
-        {/* NVS Score */}
-        <div className="nexus-card text-center max-w-2xl mx-auto">
-          <h2 className="text-2xl font-black mb-4">
-            NEXUS Viral Score <span className="gradient-text">(NVS)</span>
-          </h2>
-          <p className="text-white/60 mb-6">
-            Predykcja wiralności przed publikacją. Oceniamy hak, retencję,
-            udostępnialność i optymalizację platformy.
-          </p>
-          <div className="flex justify-center gap-6">
-            <div className="text-center">
-              <div className="score-high mb-1">🔥 85-100</div>
-              <div className="text-white/50 text-xs">Wysoki potencjał</div>
-            </div>
-            <div className="text-center">
-              <div className="score-good mb-1">✅ 60-84</div>
-              <div className="text-white/50 text-xs">Dobry content</div>
-            </div>
-            <div className="text-center">
-              <div className="score-warn mb-1">⚠️ &lt;60</div>
-              <div className="text-white/50 text-xs">Auto-retry</div>
+        {/* CTA */}
+        <section className="max-w-3xl mx-auto px-6 md:px-10 pb-32 text-center">
+          <div className="glass p-10 md:p-14 relative overflow-hidden animate-pulse-glow">
+            <div className="absolute inset-0 pointer-events-none"
+              style={{ background: "radial-gradient(circle at 50% 0%, rgba(124,58,237,0.15), transparent 70%)" }} />
+
+            <h2 className="text-3xl md:text-4xl font-black mb-4 relative">
+              Gotowy żeby <span className="gradient-text">startować?</span>
+            </h2>
+            <p className="mb-8 relative" style={{ color: "var(--c-muted)" }}>
+              Wpisz temat serii. AI zajmie się resztą — od scenariusza po gotowe pliki MP4.
+            </p>
+
+            <div className="flex flex-col sm:flex-row gap-4 justify-center relative">
+              <Link href="/studio" className="btn-primary" style={{ fontSize: "16px", padding: "16px 36px" }}>
+                🚀 Zacznij teraz — za darmo
+              </Link>
+              <Link href="/analityka" className="btn-secondary">
+                Sprawdź analitykę
+              </Link>
             </div>
           </div>
-        </div>
+        </section>
       </main>
+
+      {/* FOOTER */}
+      <footer className="border-t px-6 md:px-10 py-8" style={{ borderColor: "var(--c-border)" }}>
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-7 h-7 rounded-lg flex items-center justify-center text-xs font-black text-white"
+              style={{ background: "linear-gradient(135deg, #7c3aed, #06b6d4)" }}>
+              VL
+            </div>
+            <span className="font-semibold">ViraLoop</span>
+            <span className="text-xs" style={{ color: "var(--c-muted)" }}>— AI Shorts Factory</span>
+          </div>
+          <div className="flex items-center gap-6 text-sm" style={{ color: "var(--c-muted)" }}>
+            <Link href="/studio" className="hover:text-white transition-colors">Studio</Link>
+            <Link href="/serie" className="hover:text-white transition-colors">Serie</Link>
+            <Link href="/analityka" className="hover:text-white transition-colors">Analityka</Link>
+            <span>OpenAI Powered</span>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }

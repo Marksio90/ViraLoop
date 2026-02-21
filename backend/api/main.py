@@ -32,6 +32,7 @@ from konfiguracja import pobierz_konfiguracje
 from api.trasy.wideo import router as router_wideo
 from api.trasy.ws import router as router_ws
 from api.trasy.zadania import router as router_zadania
+from api.trasy.serie import router as router_serie
 
 # Konfiguruj strukturowane logi
 structlog.configure(
@@ -152,6 +153,7 @@ async def loguj_czas_odpowiedzi(request: Request, call_next):
 app.include_router(router_wideo)
 app.include_router(router_ws)       # WebSocket: /ws/wideo/{sesja_id}
 app.include_router(router_zadania)  # Async jobs: /api/v1/zadania/
+app.include_router(router_serie)    # Serie: /api/v1/serie/
 
 
 # ====================================================================

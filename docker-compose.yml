@@ -219,6 +219,7 @@ services:
       NODE_ENV: production
       NEXT_PUBLIC_API_URL: http://localhost/api
       NEXT_PUBLIC_WS_URL: ws://localhost/ws
+      BACKEND_URL: http://backend:8000
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000"]
       interval: 30s

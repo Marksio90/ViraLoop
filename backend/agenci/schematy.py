@@ -150,3 +150,60 @@ class StanNEXUS(TypedDict):
     # Koszt i czas
     koszt_calkowity_usd: float
     czas_generacji_s: float
+
+
+# ====================================================================
+# SCHEMATY SERYJNE — wieloodcinkowe narracje
+# ====================================================================
+
+class OdcinekSerii(TypedDict):
+    """Metadane jednego odcinka w serii."""
+    numer: int
+    sesja_id: str
+    tytul: str
+    streszczenie: str
+    haczyk_konca: str           # cliffhanger prowadzący do następnego odcinka
+    status: str                 # oczekuje | generacja | gotowy | blad
+    nwv: int                    # NEXUS Viral Score
+    koszt_usd: float
+    czas_generacji_s: float
+    wideo: Optional[Wideo]
+    ocena_wiralnosci: Optional[OcenaWiralnosci]
+
+
+class SeriaNarracyjna(TypedDict):
+    """Cała seria odcinków — wypełnia Historyk Serii."""
+    seria_id: str
+    tytul_serii: str
+    temat: str
+    gatunek: str                # historyczny | kryminalna | naukowy | biznesowy | etc.
+    opis_serii: str
+    platforma: List[str]
+    styl_wizualny: str
+    glos: str
+    dlugosc_odcinka_s: int
+    liczba_odcinkow: int
+    luk_narracyjny: List[str]   # sekwencja motywów fabularnych
+    odcinki: List[OdcinekSerii]
+    status: str                 # planowanie | produkcja | ukonczona | wstrzymana
+    data_utworzenia: str
+    calkowity_koszt_usd: float
+
+
+class StanSerii(TypedDict):
+    """Stan przepływu dla generacji serii odcinków."""
+    # Parametry serii
+    temat: str
+    tytul_serii: str
+    liczba_odcinkow: int
+    platforma: List[str]
+    styl_wizualny: str
+    glos: str
+    dlugosc_odcinka_sekund: int
+
+    # Rezultat planowania
+    seria: Optional[SeriaNarracyjna]
+
+    # Kontrola
+    bledy: Annotated[List[str], add]
+    metadane: Dict[str, Any]

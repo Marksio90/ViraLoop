@@ -10,59 +10,62 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // NEXUS Brand Colors
-        nexus: {
-          50: "#f0f4ff",
-          100: "#e0e9ff",
-          200: "#c7d7fe",
-          300: "#a5bcfd",
-          400: "#8196f9",
-          500: "#6366f1", // Primary
-          600: "#4f46e5",
-          700: "#4338ca",
-          800: "#3730a3",
-          900: "#312e81",
-          950: "#1e1b4b",
+        viraloop: {
+          purple:  "#7c3aed",
+          cyan:    "#06b6d4",
+          amber:   "#f59e0b",
+          bg:      "#050510",
+          surface: "#0d0d1f",
         },
-        viral: {
-          orange: "#f97316",
-          red: "#ef4444",
-          fire: "#ff4500",
-        },
+      },
+      fontFamily: {
+        sans:    ["Inter", "system-ui", "sans-serif"],
+        grotesk: ["Space Grotesk", "system-ui", "sans-serif"],
+        bebas:   ["Bebas Neue", "sans-serif"],
       },
       animation: {
-        "gradient-x": "gradient-x 3s ease infinite",
-        "pulse-slow": "pulse 3s ease-in-out infinite",
-        "fade-in": "fade-in 0.5s ease-out",
-        "slide-up": "slide-up 0.5s ease-out",
+        "fade-in":     "fadeIn 0.5s ease both",
+        "slide-in":    "slideInLeft 0.4s ease both",
+        "pulse-glow":  "pulse-glow 3s ease-in-out infinite",
+        "float":       "float 4s ease-in-out infinite",
+        "spin-slow":   "spin-slow 12s linear infinite",
+        "shimmer":     "shimmer 2s infinite",
+        "wave":        "wave 1s ease-in-out infinite",
       },
       keyframes: {
-        "gradient-x": {
-          "0%, 100%": {
-            "background-size": "200% 200%",
-            "background-position": "left center",
-          },
-          "50%": {
-            "background-size": "200% 200%",
-            "background-position": "right center",
-          },
+        fadeIn: {
+          from: { opacity: "0", transform: "translateY(12px)" },
+          to:   { opacity: "1", transform: "translateY(0)" },
         },
-        "fade-in": {
-          "0%": { opacity: "0" },
-          "100%": { opacity: "1" },
+        slideInLeft: {
+          from: { opacity: "0", transform: "translateX(-20px)" },
+          to:   { opacity: "1", transform: "translateX(0)" },
         },
-        "slide-up": {
-          "0%": { transform: "translateY(20px)", opacity: "0" },
-          "100%": { transform: "translateY(0)", opacity: "1" },
+        "pulse-glow": {
+          "0%, 100%": { boxShadow: "0 0 20px rgba(124,58,237,0.2)" },
+          "50%":      { boxShadow: "0 0 40px rgba(124,58,237,0.5), 0 0 80px rgba(124,58,237,0.15)" },
+        },
+        float: {
+          "0%, 100%": { transform: "translateY(0px)" },
+          "50%":      { transform: "translateY(-8px)" },
+        },
+        "spin-slow": {
+          from: { transform: "rotate(0deg)" },
+          to:   { transform: "rotate(360deg)" },
+        },
+        shimmer: {
+          "0%":   { backgroundPosition: "-200% center" },
+          "100%": { backgroundPosition: "200% center" },
+        },
+        wave: {
+          "0%, 100%": { transform: "scaleY(0.5)" },
+          "50%":      { transform: "scaleY(1.5)" },
         },
       },
       backgroundImage: {
-        "nexus-gradient":
-          "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-        "viral-gradient":
-          "linear-gradient(135deg, #f97316 0%, #ef4444 100%)",
-        "dark-gradient":
-          "linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)",
+        "viraloop-gradient": "linear-gradient(135deg, #7c3aed 0%, #06b6d4 100%)",
+        "dark-grid":
+          "linear-gradient(rgba(124,58,237,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(124,58,237,0.04) 1px, transparent 1px)",
       },
     },
   },

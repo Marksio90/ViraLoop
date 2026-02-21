@@ -12,246 +12,223 @@ interface WynikWiralnosci {
   odznaka: string;
   uzasadnienie: string;
   wskazowki_optymalizacji: string[];
-  kluczowe_slabe?: string;
 }
 
-const PRZYKŁADOWE_BRIEFY = [
-  "Jak zimne prysznice zwiększają testosteron i energię",
-  "3 błędy, które zabijają Twoje wideo na TikToku",
-  "Sekret produktywności, który stosują milionerzy",
-  "Dlaczego 90% twórców nigdy nie viralizuje",
+const PRZYKŁADY = [
+  "Tajemnica zaginięcia Kolumny Fararona — 3 teorie których nie znasz",
+  "Jak Tesla był skazany na zapomnienie przez Edisona i JP Morgana",
+  "3 decyzje które doprowadziły do upadku Cesarstwa Rzymskiego",
+  "Sekrety piramid których szkoła ci nie powiedziała",
 ];
 
-function GrafSlupkowy({ etykieta, wartosc, kolor = "indigo" }: {
-  etykieta: string;
-  wartosc: number;
-  kolor?: string;
-}) {
-  const kolorKlasa = {
-    indigo: "from-indigo-500 to-purple-500",
-    green: "from-green-500 to-emerald-500",
-    orange: "from-orange-500 to-red-500",
-    pink: "from-pink-500 to-rose-500",
-  }[kolor] ?? "from-indigo-500 to-purple-500";
-
+function ScoreMeter({ value, label, color }: { value: number; label: string; color: string }) {
   return (
-    <div className="space-y-1">
-      <div className="flex justify-between text-sm">
-        <span className="text-white/60">{etykieta}</span>
-        <span className="font-bold">{wartosc}/100</span>
+    <div>
+      <div className="flex justify-between text-sm mb-2">
+        <span style={{ color: "var(--c-muted)" }}>{label}</span>
+        <span className="font-bold">{value}/100</span>
       </div>
-      <div className="w-full bg-white/10 rounded-full h-2.5">
+      <div className="h-2 rounded-full" style={{ background: "rgba(255,255,255,0.06)" }}>
         <div
-          className={`h-2.5 rounded-full bg-gradient-to-r ${kolorKlasa} transition-all duration-1000`}
-          style={{ width: `${wartosc}%` }}
+          className="h-full rounded-full transition-all duration-700"
+          style={{ width: `${value}%`, background: color }}
         />
       </div>
     </div>
   );
 }
 
-export default function AnaliitykaPage() {
+function getNVSColor(nwv: number) {
+  if (nwv >= 85) return "#10b981";
+  if (nwv >= 60) return "#f59e0b";
+  return "#ef4444";
+}
+
+export default function AnalitikaPage() {
   const [brief, setBrief] = useState("");
-  const [platforma, setPlatforma] = useState(["tiktok", "youtube"]);
+  const [platformy, setPlatformy] = useState<string[]>(["tiktok", "youtube"]);
   const [dlugosc, setDlugosc] = useState(60);
   const [ladowanie, setLadowanie] = useState(false);
   const [wynik, setWynik] = useState<WynikWiralnosci | null>(null);
-  const [historia, setHistoria] = useState<WynikWiralnosci[]>([]);
+  const [historia, setHistoria] = useState<{ brief: string; nwv: number }[]>([]);
 
   const analizuj = async () => {
-    if (!brief.trim() || brief.length < 10) return;
-
+    if (brief.trim().length < 10) return;
     setLadowanie(true);
     setWynik(null);
 
     try {
-      const odpowiedz = await fetch("/api/v1/wideo/wiralnosc", {
+      const res = await fetch("http://localhost:8000/api/v1/wideo/wiralnosc", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          brief,
-          platforma,
-          dlugosc_sekund: dlugosc,
-        }),
+        body: JSON.stringify({ brief, platforma: platformy, dlugosc_sekund: dlugosc }),
       });
 
-      if (!odpowiedz.ok) throw new Error("Błąd serwera");
-
-      const dane: WynikWiralnosci = await odpowiedz.json();
+      if (!res.ok) throw new Error();
+      const dane: WynikWiralnosci = await res.json();
       setWynik(dane);
-      setHistoria((prev) => [dane, ...prev.slice(0, 4)]);
-    } catch (e) {
-      console.error(e);
-      // Mock dla demonstracji
-      const mockWynik: WynikWiralnosci = {
-        wynik_nwv: Math.floor(65 + Math.random() * 25),
-        wynik_haka: Math.floor(60 + Math.random() * 30),
-        wynik_zatrzymania: Math.floor(60 + Math.random() * 25),
-        wynik_udostepnialnosci: Math.floor(55 + Math.random() * 30),
+      setHistoria(prev => [{ brief: brief.slice(0, 50), nwv: dane.wynik_nwv }, ...prev.slice(0, 5)]);
+    } catch {
+      // Demo fallback
+      const nwv = Math.floor(62 + Math.random() * 28);
+      const mock: WynikWiralnosci = {
+        wynik_nwv: nwv,
+        wynik_haka: Math.floor(nwv - 5 + Math.random() * 15),
+        wynik_zatrzymania: Math.floor(nwv - 8 + Math.random() * 12),
+        wynik_udostepnialnosci: Math.floor(nwv - 10 + Math.random() * 18),
         wynik_platformy: {
-          tiktok: Math.floor(65 + Math.random() * 25),
-          youtube: Math.floor(60 + Math.random() * 25),
-          instagram: Math.floor(58 + Math.random() * 25),
+          tiktok: Math.floor(nwv + Math.random() * 10),
+          youtube: Math.floor(nwv - 5 + Math.random() * 10),
+          instagram: Math.floor(nwv - 8 + Math.random() * 10),
         },
-        odznaka: "✅ Dobry content",
-        uzasadnienie: "Demo mode — backend niedostępny",
+        odznaka: nwv >= 85 ? "🔥 Wysoki potencjał wiralny" : nwv >= 60 ? "✅ Dobry content" : "⚠️ Wymaga optymalizacji",
+        uzasadnienie: "Demo mode — wyniki szacunkowe (backend offline)",
         wskazowki_optymalizacji: [
-          "Dodaj tekst na ekranie w pierwszych 3 sekundach",
-          "Skróć CTA do 5-7 słów",
-          "Rozważ zakończenie z pętlą",
+          "Zacznij od szokującego pytania lub faktu w pierwszych 3 sekundach",
+          "Dodaj animowany tekst na ekranie — zwiększa retencję o ~40%",
+          "Zakończ z cliffhangerem do następnego odcinka serii",
+          "Skróć tytuł do max 8 słów — lepszy CTR na YT Shorts",
         ],
       };
-      setWynik(mockWynik);
+      setWynik(mock);
+      setHistoria(prev => [{ brief: brief.slice(0, 50), nwv }, ...prev.slice(0, 5)]);
     } finally {
       setLadowanie(false);
     }
   };
 
-  const nwv = wynik?.wynik_nwv ?? 0;
-  const klasaNVS =
-    nwv >= 85 ? "score-high" : nwv >= 60 ? "score-good" : "score-warn";
-
   return (
-    <div className="min-h-screen bg-[#0f0f1a] text-white">
-      <div className="fixed inset-0 bg-gradient-to-br from-purple-950/20 via-[#0f0f1a] to-indigo-950/10 pointer-events-none" />
+    <div className="min-h-screen relative" style={{ background: "var(--c-bg)" }}>
+      {/* Orbs */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-0 right-0 w-[350px] h-[350px] rounded-full opacity-10"
+          style={{ background: "radial-gradient(circle, #7c3aed 0%, transparent 70%)" }} />
+        <div className="absolute bottom-0 left-0 w-[250px] h-[250px] rounded-full opacity-10"
+          style={{ background: "radial-gradient(circle, #06b6d4 0%, transparent 70%)" }} />
+      </div>
 
-      {/* Nawigacja */}
-      <nav className="relative z-10 flex items-center justify-between px-8 py-5 border-b border-white/10">
-        <Link href="/" className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-xl flex items-center justify-center text-xl font-black">
-            N
+      {/* NAV */}
+      <nav className="relative z-20 flex items-center justify-between px-6 py-4 border-b"
+        style={{ borderColor: "var(--c-border)", background: "rgba(5,5,16,0.9)", backdropFilter: "blur(20px)" }}>
+        <Link href="/" className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center text-xs font-black text-white"
+            style={{ background: "linear-gradient(135deg, #7c3aed, #06b6d4)" }}>
+            VL
           </div>
-          <span className="text-xl font-black gradient-text">NEXUS Analityka</span>
+          <span className="font-bold">ViraLoop</span>
         </Link>
-        <Link href="/studio" className="nexus-button text-sm">
-          Studio →
-        </Link>
+        <div className="flex items-center gap-3">
+          <Link href="/studio" className="btn-ghost text-sm">Studio</Link>
+          <Link href="/serie" className="btn-ghost text-sm">Serie</Link>
+        </div>
       </nav>
 
-      <div className="relative z-10 max-w-5xl mx-auto px-8 py-10">
-        <div className="mb-10">
-          <h1 className="text-4xl font-black mb-2">
+      <div className="relative z-10 max-w-5xl mx-auto px-4 md:px-6 py-8">
+        {/* Header */}
+        <div className="mb-8">
+          <h1 className="text-3xl md:text-4xl font-black mb-2">
             Silnik <span className="gradient-text">Wiralności</span>
           </h1>
-          <p className="text-white/50">
-            Predykcja wiralności przed publikacją. Analizuj brief i optymalizuj
-            zanim stworzysz wideo.
+          <p style={{ color: "var(--c-muted)" }}>
+            Predykcja NEXUS Viral Score przed stworzeniem wideo. Analizuj i optymalizuj brief zanim wydasz pieniądze.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-          {/* Formularz analizy */}
-          <div className="space-y-6">
-            <div className="nexus-card">
-              <label className="text-sm font-bold text-white/80 block mb-2">
-                Brief / Temat wideo
-              </label>
-              <textarea
-                className="nexus-input resize-none h-24"
-                placeholder="Opisz swoje wideo lub wklej temat..."
-                value={brief}
-                onChange={(e) => setBrief(e.target.value)}
-                disabled={ladowanie}
-              />
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Lewa — formularz */}
+          <div className="space-y-4">
+            <div className="glass p-5 space-y-4">
+              <div>
+                <label className="block text-xs font-semibold uppercase tracking-wider mb-2"
+                  style={{ color: "var(--c-muted)" }}>
+                  Brief / Temat wideo
+                </label>
+                <textarea
+                  className="input-premium"
+                  placeholder="Opisz temat wideo lub odcinka serii..."
+                  value={brief}
+                  onChange={e => setBrief(e.target.value)}
+                  rows={4}
+                  disabled={ladowanie}
+                />
+              </div>
 
-              {/* Przykładowe briefy */}
-              <div className="mt-3 flex flex-wrap gap-2">
-                {PRZYKŁADOWE_BRIEFY.map((p) => (
-                  <button
-                    key={p}
-                    onClick={() => setBrief(p)}
-                    className="text-xs bg-white/5 hover:bg-white/10 border border-white/10 rounded-lg px-3 py-1 text-white/60 hover:text-white/80 transition-all"
-                  >
-                    {p.substring(0, 30)}...
-                  </button>
-                ))}
+              {/* Quick examples */}
+              <div>
+                <p className="text-xs mb-2" style={{ color: "var(--c-muted)" }}>Przykłady:</p>
+                <div className="flex flex-wrap gap-2">
+                  {PRZYKŁADY.map(p => (
+                    <button
+                      key={p}
+                      onClick={() => setBrief(p)}
+                      className="tag"
+                    >
+                      {p.slice(0, 35)}…
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
 
-            {/* Platformy i długość */}
-            <div className="nexus-card">
-              <div className="flex flex-wrap gap-3 mb-4">
-                {["tiktok", "youtube", "instagram"].map((p) => (
-                  <button
-                    key={p}
-                    onClick={() =>
-                      setPlatforma((prev) =>
-                        prev.includes(p)
-                          ? prev.filter((x) => x !== p)
-                          : [...prev, p]
-                      )
-                    }
-                    className={`px-3 py-1.5 rounded-lg text-sm font-bold transition-all ${
-                      platforma.includes(p)
-                        ? "bg-indigo-500/20 border border-indigo-500 text-indigo-300"
-                        : "bg-white/5 border border-white/20 text-white/50"
-                    }`}
-                  >
-                    {p === "tiktok" ? "🎵" : p === "youtube" ? "▶️" : "📸"}{" "}
-                    {p}
-                  </button>
-                ))}
+            {/* Platformy + długość */}
+            <div className="glass p-5 space-y-4">
+              <div>
+                <label className="block text-xs font-semibold mb-2" style={{ color: "var(--c-muted)" }}>
+                  Platformy docelowe
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {["tiktok", "youtube", "instagram"].map(p => (
+                    <button
+                      key={p}
+                      onClick={() => setPlatformy(prev => prev.includes(p) ? prev.filter(x => x !== p) : [...prev, p])}
+                      className={`platform-pill ${platformy.includes(p) ? `active-${p}` : "inactive"}`}
+                    >
+                      {p === "tiktok" ? "🎵 TikTok" : p === "youtube" ? "▶️ YouTube" : "📸 Instagram"}
+                    </button>
+                  ))}
+                </div>
               </div>
 
               <div>
-                <label className="text-xs text-white/50 block mb-1">
-                  Docelowa długość: {dlugosc}s
+                <label className="block text-xs font-semibold mb-2" style={{ color: "var(--c-muted)" }}>
+                  Długość: <span className="text-white font-bold">{dlugosc}s</span>
                 </label>
                 <input
-                  type="range"
-                  min={15}
-                  max={180}
-                  step={15}
-                  value={dlugosc}
-                  onChange={(e) => setDlugosc(Number(e.target.value))}
-                  className="w-full accent-indigo-500"
+                  type="range" min={15} max={180} step={15} value={dlugosc}
+                  onChange={e => setDlugosc(+e.target.value)}
+                  className="w-full accent-violet-500"
+                  disabled={ladowanie}
                 />
-                <div className="flex justify-between text-xs text-white/30 mt-1">
-                  <span>15s</span>
-                  <span>60s</span>
-                  <span>120s</span>
-                  <span>180s</span>
-                </div>
               </div>
             </div>
 
             <button
               onClick={analizuj}
-              disabled={ladowanie || brief.length < 10}
-              className="w-full nexus-button py-3"
+              disabled={ladowanie || brief.trim().length < 10}
+              className="btn-primary w-full justify-center"
+              style={{ padding: "15px", fontSize: 15, opacity: brief.trim().length < 10 ? 0.5 : 1 }}
             >
               {ladowanie ? (
-                <span className="flex items-center justify-center gap-2">
-                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                  Analizuję...
-                </span>
-              ) : (
-                "🔮 Analizuj Wiralność"
-              )}
+                <><svg className="animate-spin w-5 h-5" viewBox="0 0 24 24" fill="none">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.4 0 0 5.4 0 12h4z" />
+                </svg> Analizuję...</>
+              ) : "🔮 Analizuj wiralność"}
             </button>
 
             {/* Historia */}
             {historia.length > 0 && (
-              <div className="nexus-card">
-                <h4 className="font-bold mb-3 text-sm">Historia analiz</h4>
+              <div className="glass p-4">
+                <p className="text-xs font-bold uppercase tracking-wider mb-3" style={{ color: "var(--c-muted)" }}>
+                  Historia analiz
+                </p>
                 <div className="space-y-2">
                   {historia.map((h, i) => (
-                    <div
-                      key={i}
-                      className="flex items-center justify-between py-2 border-b border-white/5 last:border-0"
-                    >
-                      <div
-                        className={`text-lg font-black ${
-                          h.wynik_nwv >= 85
-                            ? "text-orange-400"
-                            : h.wynik_nwv >= 60
-                            ? "text-green-400"
-                            : "text-yellow-400"
-                        }`}
-                      >
-                        NVS {h.wynik_nwv}
-                      </div>
-                      <div className="text-white/40 text-xs">{h.odznaka}</div>
+                    <div key={i} className="flex items-center justify-between py-2 border-b" style={{ borderColor: "var(--c-border)" }}>
+                      <span className="text-xs truncate max-w-[200px]" style={{ color: "var(--c-muted)" }}>{h.brief}…</span>
+                      <span className="font-bold text-sm ml-2" style={{ color: getNVSColor(h.nwv) }}>
+                        {h.nwv}
+                      </span>
                     </div>
                   ))}
                 </div>
@@ -259,108 +236,88 @@ export default function AnaliitykaPage() {
             )}
           </div>
 
-          {/* Wyniki */}
+          {/* Prawa — wyniki */}
           <div>
             {!wynik && !ladowanie && (
-              <div className="nexus-card h-full flex flex-col items-center justify-center text-center py-20">
-                <div className="text-6xl mb-4">🔮</div>
-                <h3 className="text-xl font-bold mb-2">Predykcja Wiralności</h3>
-                <p className="text-white/40 max-w-xs">
-                  Wpisz brief i kliknij analizuj — otrzymasz szczegółową
-                  predykcję NVS przed stworzeniem wideo.
+              <div className="glass p-10 h-full flex flex-col items-center justify-center text-center">
+                <div className="text-5xl mb-4">🔮</div>
+                <h3 className="font-bold text-lg mb-2">Predykcja NVS</h3>
+                <p className="text-sm" style={{ color: "var(--c-muted)" }}>
+                  Wpisz brief i kliknij Analizuj — otrzymasz szczegółową ocenę wiralności przed inwestycją w generację.
                 </p>
               </div>
             )}
 
             {ladowanie && (
-              <div className="nexus-card h-full flex flex-col items-center justify-center py-20">
-                <div className="w-16 h-16 border-4 border-indigo-500/30 border-t-indigo-500 rounded-full animate-spin mb-4" />
-                <p className="text-white/60">Analizuję algorytmy platform...</p>
+              <div className="glass p-10 h-full flex flex-col items-center justify-center text-center">
+                <div className="w-14 h-14 rounded-full border-2 border-violet-500 border-t-transparent animate-spin mb-4" />
+                <p className="text-sm" style={{ color: "var(--c-muted)" }}>
+                  Analizuję algorytmy platform…
+                </p>
               </div>
             )}
 
             {wynik && !ladowanie && (
-              <div className="space-y-6 animate-slide-up">
-                {/* NVS Score */}
-                <div className="nexus-card text-center">
-                  <div className="text-7xl font-black gradient-text mb-2">
+              <div className="space-y-4 animate-fade-in">
+                {/* Główny score */}
+                <div className="glass p-6 text-center">
+                  <div
+                    className="text-7xl font-black stat-number mb-2"
+                    style={{ color: getNVSColor(wynik.wynik_nwv) }}
+                  >
                     {wynik.wynik_nwv}
                   </div>
-                  <div className="text-white/50 mb-3">NEXUS Viral Score</div>
-                  <div className={klasaNVS}>{wynik.odznaka}</div>
+                  <div className="text-sm mb-2" style={{ color: "var(--c-muted)" }}>NEXUS Viral Score</div>
+                  <div className="font-bold">{wynik.odznaka}</div>
                   {wynik.uzasadnienie && (
-                    <p className="text-white/50 text-sm mt-3">
+                    <p className="text-xs mt-2" style={{ color: "var(--c-muted)" }}>
                       {wynik.uzasadnienie}
                     </p>
                   )}
                 </div>
 
-                {/* Komponenty NVS */}
-                <div className="nexus-card space-y-4">
-                  <h4 className="font-bold">Komponenty NVS</h4>
-                  <GrafSlupkowy
-                    etykieta="💥 Siła Haka"
-                    wartosc={wynik.wynik_haka}
-                    kolor="orange"
-                  />
-                  <GrafSlupkowy
-                    etykieta="⏱️ Retencja"
-                    wartosc={wynik.wynik_zatrzymania}
-                    kolor="indigo"
-                  />
-                  <GrafSlupkowy
-                    etykieta="🔁 Udostępnialność"
-                    wartosc={wynik.wynik_udostepnialnosci}
-                    kolor="green"
-                  />
+                {/* Komponenty */}
+                <div className="glass p-5 space-y-4">
+                  <h4 className="font-bold text-sm">Składniki NVS</h4>
+                  <ScoreMeter label="💥 Siła haka" value={wynik.wynik_haka} color="linear-gradient(90deg, #f59e0b, #ef4444)" />
+                  <ScoreMeter label="⏱ Retencja widza" value={wynik.wynik_zatrzymania} color="linear-gradient(90deg, #7c3aed, #06b6d4)" />
+                  <ScoreMeter label="🔁 Udostępnialność" value={wynik.wynik_udostepnialnosci} color="linear-gradient(90deg, #10b981, #059669)" />
                 </div>
 
                 {/* Per platforma */}
-                {wynik.wynik_platformy && (
-                  <div className="nexus-card space-y-4">
-                    <h4 className="font-bold">Per Platforma</h4>
-                    {Object.entries(wynik.wynik_platformy).map(
-                      ([platf, wynik_p]) => (
-                        <GrafSlupkowy
-                          key={platf}
-                          etykieta={
-                            platf === "tiktok"
-                              ? "🎵 TikTok"
-                              : platf === "youtube"
-                              ? "▶️ YouTube"
-                              : "📸 Instagram"
-                          }
-                          wartosc={wynik_p}
-                          kolor="pink"
-                        />
-                      )
-                    )}
-                  </div>
-                )}
+                <div className="glass p-5 space-y-4">
+                  <h4 className="font-bold text-sm">Per platforma</h4>
+                  {Object.entries(wynik.wynik_platformy).map(([p, v]) => (
+                    <ScoreMeter
+                      key={p}
+                      label={p === "tiktok" ? "🎵 TikTok" : p === "youtube" ? "▶️ YouTube" : "📸 Instagram"}
+                      value={v}
+                      color="linear-gradient(90deg, #ec4899, #8b5cf6)"
+                    />
+                  ))}
+                </div>
 
                 {/* Wskazówki */}
                 {wynik.wskazowki_optymalizacji.length > 0 && (
-                  <div className="nexus-card">
-                    <h4 className="font-bold mb-3">💡 Jak zwiększyć NVS</h4>
+                  <div className="glass p-5">
+                    <h4 className="font-bold text-sm mb-3">💡 Jak zwiększyć NVS</h4>
                     <ul className="space-y-2">
                       {wynik.wskazowki_optymalizacji.map((w, i) => (
-                        <li
-                          key={i}
-                          className="flex gap-2 text-sm text-white/70"
-                        >
-                          <span className="text-indigo-400 flex-shrink-0">
-                            {i + 1}.
-                          </span>
-                          {w}
+                        <li key={i} className="flex gap-2 text-sm">
+                          <span className="text-violet-400 flex-shrink-0 font-bold">{i + 1}.</span>
+                          <span style={{ color: "var(--c-muted)" }}>{w}</span>
                         </li>
                       ))}
                     </ul>
                   </div>
                 )}
 
-                {/* CTA do Studio */}
-                <Link href="/studio" className="nexus-button block text-center py-3">
-                  Stwórz wideo z tym briefem →
+                <Link
+                  href={`/studio?gatunek=${encodeURIComponent(brief.slice(0, 40))}`}
+                  className="btn-primary w-full justify-center"
+                  style={{ padding: "14px" }}
+                >
+                  🎬 Stwórz wideo z tym briefem
                 </Link>
               </div>
             )}

@@ -33,34 +33,15 @@ scrape_configs:
     metrics_path: /metrics
     scrape_interval: 10s
 
-  # Celery Worker (via Flower)
+  # Celery Worker (via Flower — eksponuje /metrics w formacie Prometheus)
   - job_name: nexus-celery
     static_configs:
       - targets: [flower:5555]
     metrics_path: /metrics
     scrape_interval: 15s
 
-  # Redis (via redis_exporter)
-  - job_name: redis
-    static_configs:
-      - targets: [redis:6379]
-    scrape_interval: 30s
-
-  # PostgreSQL
-  - job_name: postgres
-    static_configs:
-      - targets: [postgres:5432]
-    scrape_interval: 30s
-
-  # Nginx
-  - job_name: nginx
-    static_configs:
-      - targets: [nginx:80]
-    metrics_path: /nginx-health
-    scrape_interval: 30s
-
-  # Node (host metryki przez Docker)
-  - job_name: docker
-    static_configs:
-      - targets: [host.docker.internal:9323]
-    scrape_interval: 30s
+  # Redis, PostgreSQL, Nginx — wymagają dedykowanych eksporterów
+  # (redis_exporter, postgres_exporter, nginx-prometheus-exporter).
+  # Bezpośrednie scrapowanie portów bazy danych (6379, 5432) przez HTTP
+  # powoduje błędy protokołu i alarmy bezpieczeństwa Redis.
+  # Dodaj eksportery do docker-compose.yml aby odblokować te metryki.

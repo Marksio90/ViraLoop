@@ -20,7 +20,13 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
+from prometheus_client import (
+    generate_latest,
+    CONTENT_TYPE_LATEST,
+    CollectorRegistry,
+    multiprocess as prom_multiprocess,
+)
 
 from konfiguracja import pobierz_konfiguracje
 from api.trasy.wideo import router as router_wideo
@@ -181,6 +187,20 @@ async def root():
             "zdrowie": "/api/zdrowie",
         }
     }
+
+
+@app.get("/metrics", include_in_schema=False)
+async def metryki():
+    """Prometheus metrics — obsługuje tryb multi-process uvicorn."""
+    multiproc_dir = os.environ.get("PROMETHEUS_MULTIPROC_DIR")
+    if multiproc_dir:
+        os.makedirs(multiproc_dir, exist_ok=True)
+        registry = CollectorRegistry()
+        prom_multiprocess.MultiProcessCollector(registry)
+        data = generate_latest(registry)
+    else:
+        data = generate_latest()
+    return Response(data, media_type=CONTENT_TYPE_LATEST)
 
 
 @app.get("/api/zdrowie", summary="Health Check", tags=["System"])

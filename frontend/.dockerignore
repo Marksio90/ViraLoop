@@ -1,0 +1,30 @@
+# Dependencies — reinstalled inside image
+node_modules/
+
+# Next.js build output — built inside image
+.next/
+out/
+
+# Development artifacts
+*.log
+npm-debug.log*
+.turbo/
+
+# Environment files — injected at runtime
+.env
+.env.*
+!.env.example
+
+# Git
+.git/
+.gitignore
+
+# Docker files — not needed inside image
+Dockerfile*
+.dockerignore
+
+# Editor / OS
+.DS_Store
+*.swp
+.vscode/
+.idea/

@@ -184,8 +184,8 @@ function StudioInner() {
         setWyniki(data.odcinki.map((od: Record<string, unknown>, i: number) => ({
           sesja_id: od.sesja_id as string || `ep_${i}`,
           tytul: od.tytul as string || `Odcinek ${i + 1}`,
-          sciezka_wideo: od.wideo?.sciezka_pliku as string || "",
-          miniatura: od.wideo?.miniatura_sciezka as string || "",
+          sciezka_wideo: (od.wideo as Record<string, string>)?.sciezka_pliku || "",
+          miniatura: (od.wideo as Record<string, string>)?.miniatura_sciezka || "",
           nwv: (od.ocena_wiralnosci as Record<string, unknown>)?.wynik_nwv as number || 0,
           koszt_usd: od.koszt_usd as number || 0,
           czas_s: od.czas_generacji_s as number || 0,

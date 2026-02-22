@@ -127,7 +127,7 @@ async def zaplanuj_serie(stan: StanSerii) -> dict:
 
     try:
         odpowiedz = await klient.chat.completions.create(
-            model=konf.MODEL_STRATEGIA,  # GPT-4o-mini dla szybkości i kosztu
+            model=konf.MODEL_INTELIGENTNY,  # GPT-4o — złożone planowanie narracyjne
             messages=[
                 {
                     "role": "system",

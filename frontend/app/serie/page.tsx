@@ -146,7 +146,7 @@ function SeriaDetail({ seria }: { seria: Seria }) {
   const kontynuuj = async () => {
     setGenerujOdcinek(true);
     try {
-      const res = await fetch(`http://localhost:8000/api/v1/serie/${seria.seria_id}/kontynuuj`, {
+      const res = await fetch(`/api/v1/serie/${seria.seria_id}/kontynuuj`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ liczba_nowych_odcinkow: 1 }),
@@ -255,7 +255,7 @@ function SeriaDetail({ seria }: { seria: Seria }) {
               {od.gotowy && (
                 <div className="flex gap-2 flex-shrink-0">
                   <a
-                    href={`http://localhost:8000/api/v1/wideo/${od.sesja_id}/pobierz`}
+                    href={`/api/v1/wideo/${od.sesja_id}/pobierz`}
                     target="_blank" rel="noopener noreferrer"
                     className="btn-ghost text-xs"
                     style={{ padding: "6px 10px" }}

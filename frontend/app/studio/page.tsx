@@ -170,7 +170,7 @@ function StudioInner() {
             dlugosc_sekund: dlugosc,
           };
 
-      const res = await fetch(`http://localhost:8000${endpoint}`, {
+      const res = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
@@ -565,7 +565,7 @@ function StudioInner() {
                       <div className="w-16 h-28 rounded-lg overflow-hidden flex-shrink-0"
                         style={{ background: "rgba(255,255,255,0.05)" }}>
                         {w.miniatura ? (
-                          <img src={`http://localhost:8000/api/v1/wideo/${w.sesja_id}/miniaturka`}
+                          <img src={`/api/v1/wideo/${w.sesja_id}/miniaturka`}
                             alt={w.tytul} className="w-full h-full object-cover" />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center text-2xl">🎬</div>
@@ -599,7 +599,7 @@ function StudioInner() {
 
                         <div className="flex gap-2 mt-3">
                           <a
-                            href={`http://localhost:8000/api/v1/wideo/${w.sesja_id}/pobierz`}
+                            href={`/api/v1/wideo/${w.sesja_id}/pobierz`}
                             className="btn-primary flex-1 justify-center"
                             style={{ padding: "8px 12px", fontSize: 12 }}
                             target="_blank" rel="noopener noreferrer"

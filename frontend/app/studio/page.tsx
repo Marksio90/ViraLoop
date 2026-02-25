@@ -643,23 +643,24 @@ function StudioInner() {
 
                 <div className="divider my-4" />
 
-                <div className="text-xs space-y-1" style={{ color: "var(--c-muted)" }}>
-                  <div className="flex justify-between">
-                    <span>Koszt / odcinek</span>
-                    <span className="text-white">~$0.15</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Czas generacji</span>
-                    <span className="text-white">~90 sekund</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Format</span>
-                    <span className="text-white">MP4 1080×1920</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Napisy</span>
-                    <span className="text-emerald-400">Animowane karaoke</span>
-                  </div>
+                <div
+                  className="text-xs"
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: "1fr auto",
+                    rowGap: "4px",
+                    columnGap: "12px",
+                    color: "var(--c-muted)",
+                  }}
+                >
+                  <span>Koszt / odcinek</span>
+                  <span className="text-white text-right" style={{ whiteSpace: "nowrap" }}>~$0.15</span>
+                  <span>Czas generacji</span>
+                  <span className="text-white text-right" style={{ whiteSpace: "nowrap" }}>~90 sekund</span>
+                  <span>Format</span>
+                  <span className="text-white text-right" style={{ whiteSpace: "nowrap" }}>MP4 1080×1920</span>
+                  <span>Napisy</span>
+                  <span className="text-emerald-400 text-right" style={{ whiteSpace: "nowrap" }}>Animowane karaoke</span>
                 </div>
               </div>
             )}

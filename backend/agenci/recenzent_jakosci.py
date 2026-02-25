@@ -1,16 +1,18 @@
 """
-NEXUS — Agent 5: Recenzent Jakości
-=====================================
+NEXUS — Agent 5: Recenzent Jakości v2.0
+==========================================
 Ocenia kompletne wideo i podejmuje decyzję o zatwierdzeniu.
 Model: gpt-4o (najinteligentniejszy model — krytyczna decyzja)
 Koszt: ~$0.005 na wideo
 
-Kompetencje:
-- Ocena haka i pierwszych 3 sekund
-- Analiza scenariusza i pacing
-- Ocena spójności wizualnej
-- Decyzja: zatwierdź / popraw
-- Generacja oceny wiralności (NVS 0-100)
+Nowości v2.0:
+- [INNOWACJA 8] Cliffhanger Coefficient (CDS — Cognitive Dissonance Score)
+  Mierzy jak "otwarte" jest zakończenie wideo na skali 0.0-1.0
+  0.0 = wszystkie pytania zamknięte, widz "nasycony" — nie wróci
+  1.0 = frustrujące, nic nie wyjaśnione — odbije się
+  Cel: CDS = 0.65-0.80 (maksymalna motywacja do powrotu bez frustracji)
+  Automatyczna sugestia jak "otworzyć" lub "zamknąć" zakończenie
+  Koszt: $0 extra (wbudowane w istniejące wywołanie GPT-4o)
 """
 
 import json
@@ -22,7 +24,7 @@ from agenci.schematy import StanNEXUS, OcenaJakosci, OcenaWiralnosci
 
 logger = structlog.get_logger(__name__)
 
-SYSTEM_RECENZENT = """Jesteś Recenzentem Jakości NEXUS — najostrzejszym krytykiem treści wideo.
+SYSTEM_RECENZENT = """Jesteś Recenzentem Jakości NEXUS v2.0 — najostrzejszym krytykiem treści wideo.
 
 Twoja rola: OBIEKTYWNA ocena gotowego wideo przed publikacją.
 
@@ -61,6 +63,17 @@ Oblicz na podstawie:
 - NVS >= 85: 🔥 Wysoki potencjał wiralny — odznaka ognia
 - NVS 60-84: ✅ Dobry content — publikuj
 - NVS < 60: ⚠️ Wymaga poprawy — zwróć do Pisarza
+
+## Cliffhanger Coefficient (CDS — Cognitive Dissonance Score):
+Oceń zakończenie wideo na skali 0.0-1.0:
+- 0.0-0.3: Zamknięte. "I to tyle." — Widz jest nasycony, nie wróci.
+- 0.4-0.6: Neutralne. "Ciekawe." — Może wróci, może nie.
+- 0.65-0.80: OPTIMUM. "Ale jak?! Muszę wiedzieć więcej." — Wróci na pewno.
+- 0.85-1.0: Frustrujące. "Nic mi nie wyjaśniłeś." — Zirytowany, nie wróci.
+
+Twój cel: CDS w zakresie 0.65-0.80.
+Jeśli CDS < 0.65: zaproponuj konkretne zdanie do dodania które otworzy pętlę.
+Jeśli CDS > 0.80: zaproponuj jak organicznie zamknąć choć jedno pytanie.
 
 Odpowiadaj WYŁĄCZNIE w JSON."""
 
@@ -105,6 +118,11 @@ Oceń i odpowiedz w JSON:
         "odznaka": "✅ Dobry content",
         "uzasadnienie": "Mocny hak, ale środek traci tempo...",
         "wskazowki_optymalizacji": ["Dodaj pattern interrupt w scenie 3", "Skróć CTA o 5 sekund"]
+    }},
+    "cliffhanger": {{
+        "cds": 0.72,
+        "interpretacja": "OPTIMUM — widz będzie chciał więcej",
+        "sugestia_korekty": null
     }}
 }}
 """
@@ -247,13 +265,36 @@ async def recenzent_jakosci(stan: StanNEXUS) -> dict:
 
         wiralosc = oblicz_ocene_wiralnosci_z_wynikow(dane)
 
+        # ── [INNOWACJA 8] Cliffhanger Coefficient ────────────────────────
+        cliffhanger_dane = dane.get("cliffhanger", {})
+        cds = float(cliffhanger_dane.get("cds", 0.5))
+        cds_interpretacja = cliffhanger_dane.get("interpretacja", "")
+        cds_sugestia = cliffhanger_dane.get("sugestia_korekty")
+
+        # Dodaj CDS do wskazówek optymalizacji jeśli poza optymalnym zakresem
+        wskazowki = wiralosc.get("wskazowki_optymalizacji", [])
+        if cds < 0.65:
+            wskazowki = [
+                f"[CDS={cds:.2f}] Zakończenie ZA ZAMKNIĘTE — dodaj otwarte pytanie: {cds_sugestia or 'Zadaj pytanie na które odpowiedź jest w kolejnym filmie'}",
+                *wskazowki,
+            ]
+        elif cds > 0.82:
+            wskazowki = [
+                f"[CDS={cds:.2f}] Zakończenie ZA OTWARTE — widz może się sfrustrować: {cds_sugestia or 'Zamknij przynajmniej jedną obietnicę z haka'}",
+                *wskazowki,
+            ]
+        wiralosc["wskazowki_optymalizacji"] = wskazowki
+        wiralosc["cliffhanger_cds"] = cds
+
         log.info(
-            "Recenzja zakończona",
+            "Recenzja v2.0 zakończona",
             wynik=wynik_ogolny,
             nwv=wiralosc["wynik_nwv"],
             odznaka=wiralosc["odznaka"],
+            cds=cds,
+            cds_interpretacja=cds_interpretacja,
             zatwierdzone=zatwierdzone,
-            koszt_usd=round(koszt, 5)
+            koszt_usd=round(koszt, 5),
         )
 
         return {

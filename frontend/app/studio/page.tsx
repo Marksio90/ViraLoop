@@ -251,7 +251,7 @@ function StudioInner() {
 
       {/* MAIN LAYOUT */}
       <div className="relative z-10 max-w-7xl mx-auto px-4 md:px-6 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-[1fr_420px] gap-6">
 
           {/* ── LEWA KOLUMNA: FORMULARZ ─────────────────────────── */}
           <div className="space-y-4">

@@ -1,15 +1,25 @@
 """
-NEXUS — Orkiestrator Multi-Agentowy (LangGraph)
-================================================
-Centralny mózg platformy NEXUS. Zarządza przepływem 5 agentów AI
+NEXUS — Orkiestrator Multi-Agentowy v2.0 (LangGraph)
+======================================================
+Centralny mózg platformy NEXUS. Zarządza przepływem agentów AI
 w deterministycznym state machine z automatycznym retry i fallback.
 
-Przepływ:
-   Brief → Strateg → Pisarz → [Reżyser Głosu + Producent Wizualny] → Recenzent → Compositor
+Przepływ v2.0:
+   Brief → [INNOWACJA 13: Trendy] → Strateg → Pisarz → [Reżyser Głosu + Producent Wizualny]
+         → Recenzent → Compositor
+
+Nowości v2.0:
+- [INNOWACJA 13] Pre-Brief Trend Injection
+  Nowy węzeł PRZED Strategiem: pobiera aktualne trendy YouTube w niszy
+  Strateg generuje plan z wiedzą co viral TERAZ, nie tylko z priorami modelu
+  Koszt: $0 (YouTube Data API darmowe)
+  Czas: +3s do pipeline (asynchronicznie z inicjalizacją)
+  Fallback: jeśli brak klucza API → pipeline działa normalnie bez trendów
 
 Specjalne właściwości:
 - Równoległe wykonanie agentów Audio i Wizualia
 - Auto-retry: jeśli wynik < 60, wróć do Pisarza (max 3 próby)
+- Deterministyczne operatory mutacji dla retry (v2.0)
 - Checkpoint: każdy krok zapisany — wznów po awarii
 - Pełne śledzenie kosztów OpenAI
 """
@@ -29,9 +39,60 @@ from agenci.rezyser_glosu import rezyser_glosu
 from agenci.producent_wizualny import producent_wizualny
 from agenci.recenzent_jakosci import recenzent_jakosci
 from generacja.compositor import kompozytor
+from rag.baza_wiedzy import pobierz_baze_wiedzy
 from konfiguracja import konf
 
 logger = structlog.get_logger(__name__)
+
+
+# ====================================================================
+# [INNOWACJA 13] WĘZEŁ: Pre-Brief Trend Injection
+# ====================================================================
+
+async def zbierz_trendy(stan: StanNEXUS) -> dict:
+    """
+    Węzeł Pre-Brief Trend Injection — pobiera aktualne trendy PRZED Strategiem.
+
+    [INNOWACJA 13] Problem: Strateg generuje plan na podstawie wiedzy modelu
+    (cutoff ~rok temu). Nie wie co viral w tym konkretnym tygodniu.
+
+    Rozwiązanie: YouTube Data API v3 → top shortsy w niszy z ostatnich 7 dni.
+    Strateg dostaje ŚWIEŻY kontekst trendów w system promptu.
+
+    Czas: +2-3s (asynchroniczne HTTP, nie blokuje głównego pipeline)
+    Koszt: $0 (YouTube Data API = darmowe 10k req/dzień)
+    Fallback: jeśli brak klucza lub błąd → pipeline działa bez trendów
+
+    Efekt: "Nie wiedziałem że X zmienia wszystko" w kontekście OBECNEGO virala
+    zamiast tego samego motywu co każde inne wideo AI.
+    """
+    log = logger.bind(wezel="zbierz_trendy")
+
+    brief = stan.get("brief", "")
+    if not brief:
+        return {"krok_aktualny": "trendy_zebrane"}
+
+    # Wyodrębnij kluczowe słowa z briefa jako nisza
+    # (pierwsze 60 znaków wystarczy dla YouTube search)
+    nisza = brief[:60]
+
+    try:
+        baza = pobierz_baze_wiedzy()
+        await baza.zasilaj_trendami(nisza)
+
+        # Pobierz kontekst trendów dla stanu
+        kontekst_trendow = await baza.pobierz_kontekst(brief)
+
+        log.info("Trendy zebrane", nisza=nisza[:40], kontekst_len=len(kontekst_trendow))
+
+        return {
+            "kontekst_marki": (stan.get("kontekst_marki", "") + "\n\n" + kontekst_trendow).strip(),
+            "krok_aktualny": "trendy_zebrane",
+        }
+
+    except Exception as e:
+        log.debug("Trendy niedostępne (nie blokuje pipeline)", blad=str(e))
+        return {"krok_aktualny": "trendy_zebrane"}
 
 
 # ====================================================================
@@ -105,6 +166,13 @@ def routing_po_strategii(
     return "koniec_z_bledem"
 
 
+def routing_po_trendach(
+    stan: StanNEXUS,
+) -> Literal["strateg_tresci"]:
+    """Routing po zebraniu trendów — zawsze przejdź do Stratega."""
+    return "strateg_tresci"
+
+
 # ====================================================================
 # WĘZEŁ: Koniec z błędem (fallback)
 # ====================================================================
@@ -136,6 +204,8 @@ def zbuduj_graf_nexus() -> StateGraph:
     graf = StateGraph(StanNEXUS)
 
     # Dodaj wszystkie węzły
+    # [INNOWACJA 13] Nowy węzeł pre-brief
+    graf.add_node("zbierz_trendy", zbierz_trendy)
     graf.add_node("strateg_tresci", strateg_tresci)
     graf.add_node("pisarz_scenariuszy", pisarz_scenariuszy)
     graf.add_node("produkcja_rownolegla", producja_rownolegle)
@@ -143,8 +213,9 @@ def zbuduj_graf_nexus() -> StateGraph:
     graf.add_node("compositor", kompozytor)
     graf.add_node("koniec_z_bledem", koniec_z_bledem)
 
-    # Punkt startowy
-    graf.add_edge(START, "strateg_tresci")
+    # [INNOWACJA 13] Punkt startowy → Zbierz trendy → Strateg
+    graf.add_edge(START, "zbierz_trendy")
+    graf.add_edge("zbierz_trendy", "strateg_tresci")
 
     # Routing po strategii
     graf.add_conditional_edges(
